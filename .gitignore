@@ -1,0 +1,12 @@
+node_modules/
+.env
+dist/
+.next/
+
+# Uploads (keep directory, not contents)
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
