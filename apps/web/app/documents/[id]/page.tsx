@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { docsApi } from "@/lib/api";
-import dynamic from "next/dynamic";
-import toast from "react-hot-toast";
-import ShareModal from "@/components/ShareModal";
+import { useEffect, useState, useCallback, useRef } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import { docsApi } from "@/lib/api"
+import dynamic from "next/dynamic"
+import toast from "react-hot-toast"
+import ShareModal from "@/components/ShareModal"
 import {
   ArrowLeft,
   Share2,
@@ -15,136 +15,156 @@ import {
   Check,
   Loader2,
   Paperclip,
-} from "lucide-react";
+  Trash2,
+} from "lucide-react"
 
 const RichEditor = dynamic(() => import("@/components/RichEditor"), {
   ssr: false,
-});
+})
 
 interface Document {
-  id: string;
-  title: string;
-  content: string;
-  ownerId: string;
-  owner: { id: string; name: string; email: string };
-  attachments: { id: string; originalName: string; filename: string }[];
+  id: string
+  title: string
+  content: string
+  ownerId: string
+  owner: { id: string; name: string; email: string }
+  attachments: { id: string; originalName: string; filename: string }[]
 }
 
-type SaveState = "saved" | "saving" | "unsaved";
+type SaveState = "saved" | "saving" | "unsaved"
+
+function SaveIndicator({ saveState }: { saveState: SaveState }) {
+  if (saveState === "saving")
+    return (
+      <span className="flex items-center gap-1 text-xs text-gray-500">
+        <Loader2 size={13} className="animate-spin" />
+        <span className="hidden sm:inline">Saving…</span>
+      </span>
+    )
+  if (saveState === "saved")
+    return (
+      <span className="flex items-center gap-1 text-xs text-gray-500">
+        <Check size={13} className="text-green-600" />
+        <span className="hidden sm:inline">Saved</span>
+      </span>
+    )
+  return (
+    <span className="flex items-center gap-1 text-xs text-amber-600 font-medium">
+      <Save size={13} />
+      <span className="hidden sm:inline">Unsaved</span>
+    </span>
+  )
+}
 
 export default function DocumentPage() {
-  const { id } = useParams<{ id: string }>();
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const { id } = useParams<{ id: string }>()
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
 
-  const [doc, setDoc] = useState<Document | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
-  const [canEdit, setCanEdit] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [saveState, setSaveState] = useState<SaveState>("saved");
-  const [showShare, setShowShare] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const attachRef = useRef<HTMLInputElement>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !user) router.replace("/");
-  }, [user, authLoading, router]);
+  const [doc, setDoc] = useState<Document | null>(null)
+  const [isOwner, setIsOwner] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
+  const [title, setTitle] = useState("")
+  const [content, setContent] = useState("")
+  const [saveState, setSaveState] = useState<SaveState>("saved")
+  const [showShare, setShowShare] = useState(false)
+  const [fetching, setFetching] = useState(true)
+  const attachRef = useRef<HTMLInputElement>(null)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!user) return;
+    if (!authLoading && !user) router.replace("/")
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (!user) return
     docsApi
       .get(id)
       .then((res) => {
-        setDoc(res.data.document);
-        setTitle(res.data.document.title);
-        setContent(res.data.document.content);
-        setIsOwner(res.data.isOwner);
-        setCanEdit(res.data.permission === "edit");
+        setDoc(res.data.document)
+        setTitle(res.data.document.title)
+        setContent(res.data.document.content)
+        setIsOwner(res.data.isOwner)
+        setCanEdit(res.data.permission === "edit")
       })
       .catch(() => {
-        toast.error("Document not found or access denied");
-        router.push("/dashboard");
+        toast.error("Document not found or access denied")
+        router.push("/dashboard")
       })
-      .finally(() => setFetching(false));
-  }, [id, user]);
+      .finally(() => setFetching(false))
+  }, [id, user])
 
   const save = useCallback(
     async (t: string, c: string) => {
-      setSaveState("saving");
+      setSaveState("saving")
       try {
-        await docsApi.update(id, { title: t, content: c });
-        setSaveState("saved");
+        await docsApi.update(id, { title: t, content: c })
+        setSaveState("saved")
       } catch {
-        setSaveState("unsaved");
-        toast.error("Failed to save");
+        setSaveState("unsaved")
+        toast.error("Failed to save")
       }
     },
-    [id]
-  );
+    [id],
+  )
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    setTitle(val);
-    setSaveState("unsaved");
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => save(val, content), 1500);
+    const val = e.target.value
+    setTitle(val)
+    setSaveState("unsaved")
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => save(val, content), 1500)
   }
 
   function handleContentChange(html: string) {
-    setContent(html);
-    setSaveState("unsaved");
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => save(title, html), 1500);
+    setContent(html)
+    setSaveState("unsaved")
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => save(title, html), 1500)
+  }
+
+  async function handleDeleteAttachment(attachmentId: string) {
+    try {
+      await docsApi.deleteAttachment(id, attachmentId)
+      setDoc((prev) =>
+        prev
+          ? {
+              ...prev,
+              attachments: prev.attachments.filter(
+                (a) => a.id !== attachmentId,
+              ),
+            }
+          : prev,
+      )
+      toast.success("Attachment deleted")
+    } catch {
+      toast.error("Failed to delete attachment")
+    }
   }
 
   async function handleAttachment(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const toastId = toast.loading("Uploading…");
+    const file = e.target.files?.[0]
+    if (!file) return
+    const toastId = toast.loading("Uploading…")
     try {
-      const res = await docsApi.uploadAttachment(id, file);
+      const res = await docsApi.uploadAttachment(id, file)
       setDoc((prev) =>
         prev
           ? { ...prev, attachments: [...prev.attachments, res.data.attachment] }
-          : prev
-      );
-      toast.success("File attached", { id: toastId });
+          : prev,
+      )
+      toast.success("File attached", { id: toastId })
       if (res.data.importedContent) {
         if (confirm("Import file content into this document?")) {
-          const merged = content + "\n" + res.data.importedContent;
-          setContent(merged);
-          save(title, merged);
+          const merged = content + "\n" + res.data.importedContent
+          setContent(merged)
+          save(title, merged)
         }
       }
     } catch {
-      toast.error("Upload failed", { id: toastId });
+      toast.error("Upload failed", { id: toastId })
     }
-    e.target.value = "";
-  }
-
-  function SaveIndicator() {
-    if (saveState === "saving")
-      return (
-        <span className="flex items-center gap-1 text-xs text-gray-500">
-          <Loader2 size={13} className="animate-spin" />
-          <span className="hidden sm:inline">Saving…</span>
-        </span>
-      );
-    if (saveState === "saved")
-      return (
-        <span className="flex items-center gap-1 text-xs text-gray-500">
-          <Check size={13} className="text-green-600" />
-          <span className="hidden sm:inline">Saved</span>
-        </span>
-      );
-    return (
-      <span className="flex items-center gap-1 text-xs text-amber-600 font-medium">
-        <Save size={13} />
-        <span className="hidden sm:inline">Unsaved</span>
-      </span>
-    );
+    e.target.value = ""
   }
 
   if (authLoading || fetching) {
@@ -152,10 +172,10 @@ export default function DocumentPage() {
       <div className="min-h-screen flex items-center justify-center text-gray-500">
         <Loader2 className="animate-spin" size={28} />
       </div>
-    );
+    )
   }
 
-  if (!doc) return null;
+  if (!doc) return null
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -184,7 +204,7 @@ export default function DocumentPage() {
           )}
 
           <div className="flex items-center gap-2 ml-auto shrink-0">
-            <SaveIndicator />
+            <SaveIndicator saveState={saveState} />
 
             {!isOwner && (
               <span className="text-xs text-gray-600 font-medium border border-gray-300 bg-gray-50 rounded px-2 py-0.5 hidden sm:block">
@@ -225,42 +245,55 @@ export default function DocumentPage() {
         </div>
       </header>
 
-      {/* Editor area */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <RichEditor
-          content={content}
-          onChange={handleContentChange}
-          editable={canEdit}
-        />
-
         {/* Attachments */}
         {doc.attachments.length > 0 && (
-          <div className="mt-6">
+          <div className="mb-6">
             <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 flex items-center gap-1">
               <Paperclip size={12} />
               Attachments
             </p>
             <div className="flex flex-wrap gap-2">
               {doc.attachments.map((a) => (
-                <a
+                <div
                   key={a.id}
-                  href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/uploads/${a.filename}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-blue-700 border border-blue-200 bg-blue-50 rounded-lg px-3 py-1.5 hover:bg-blue-100 transition-colors font-medium"
+                  className="flex items-center gap-1.5 text-xs text-blue-700 border border-blue-200 bg-blue-50 rounded-lg px-3 py-1.5 font-medium"
                 >
                   <Paperclip size={11} />
-                  {a.originalName}
-                </a>
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/uploads/${a.filename}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    {a.originalName}
+                  </a>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleDeleteAttachment(a.id)}
+                      className="ml-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete attachment"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Editor area */}
+        <RichEditor
+          content={content}
+          onChange={handleContentChange}
+          editable={canEdit}
+        />
       </main>
 
       {showShare && (
         <ShareModal docId={id} onClose={() => setShowShare(false)} />
       )}
     </div>
-  );
+  )
 }

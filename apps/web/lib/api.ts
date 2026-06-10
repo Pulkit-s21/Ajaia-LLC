@@ -58,6 +58,8 @@ export const docsApi = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+  deleteAttachment: (id: string, attachmentId: string) =>
+    api.delete(`/api/documents/${id}/attachments/${attachmentId}`),
 };
 
 // Sharing

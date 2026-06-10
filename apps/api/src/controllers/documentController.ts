@@ -211,6 +211,41 @@ export async function uploadFile(req: AuthRequest, res: Response) {
   res.status(201).json({ attachment, importedContent });
 }
 
+export async function deleteAttachment(req: AuthRequest, res: Response) {
+  const userId = req.userId!;
+  const id = req.params.id as string;
+  const attachmentId = req.params.attachmentId as string;
+
+  const doc = await prisma.document.findUnique({ where: { id } });
+  if (!doc) {
+    res.status(404).json({ error: "Document not found" });
+    return;
+  }
+
+  const isOwner = doc.ownerId === userId;
+  const share = await prisma.documentShare.findUnique({
+    where: { documentId_userId: { documentId: id, userId } },
+  });
+  if (!isOwner && share?.permission !== "edit") {
+    res.status(403).json({ error: "No edit permission" });
+    return;
+  }
+
+  const attachment = await prisma.attachment.findUnique({
+    where: { id: attachmentId },
+  });
+  if (!attachment || attachment.documentId !== id) {
+    res.status(404).json({ error: "Attachment not found" });
+    return;
+  }
+
+  const filePath = path.join(__dirname, "../../uploads", attachment.filename);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+  await prisma.attachment.delete({ where: { id: attachmentId } });
+  res.json({ success: true });
+}
+
 export async function importFileAsDocument(req: AuthRequest, res: Response) {
   const userId = req.userId!;
 

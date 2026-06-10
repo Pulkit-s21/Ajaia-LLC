@@ -7,6 +7,7 @@ import {
   deleteDocument,
   uploadFile,
   importFileAsDocument,
+  deleteAttachment,
 } from "../controllers/documentController";
 import { shareDocument, revokeShare, listShares } from "../controllers/sharingController";
 import { authenticate } from "../middleware/auth";
@@ -25,6 +26,7 @@ router.patch("/:id", updateDocument);
 router.delete("/:id", deleteDocument);
 
 router.post("/:id/upload", upload.single("file"), uploadFile);
+router.delete("/:id/attachments/:attachmentId", deleteAttachment);
 
 router.get("/:id/shares", listShares);
 router.post("/:id/shares", shareDocument);
