@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { sharingApi } from "@/lib/api";
 import toast from "react-hot-toast";
-import { X, UserPlus, Trash2, Eye, Pencil } from "lucide-react";
+import { X, UserPlus, Trash2 } from "lucide-react";
 
 interface Share {
   id: string;
@@ -58,6 +58,21 @@ export default function ShareModal({ docId, onClose }: Props) {
       toast.error(msg);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function changePermission(share: Share, newPermission: "view" | "edit") {
+    try {
+      const res = await sharingApi.share(docId, {
+        email: share.user.email,
+        permission: newPermission,
+      });
+      setShares((prev) =>
+        prev.map((s) => (s.id === share.id ? res.data.share : s))
+      );
+      toast.success("Permission updated");
+    } catch {
+      toast.error("Failed to update permission");
     }
   }
 
@@ -144,14 +159,16 @@ export default function ShareModal({ docId, onClose }: Props) {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 ml-3 shrink-0">
-                      <span className="flex items-center gap-1 text-xs text-gray-700 font-medium bg-white border border-gray-200 rounded px-2 py-0.5">
-                        {s.permission === "edit" ? (
-                          <Pencil size={11} />
-                        ) : (
-                          <Eye size={11} />
-                        )}
-                        {s.permission}
-                      </span>
+                      <select
+                        value={s.permission}
+                        onChange={(e) =>
+                          changePermission(s, e.target.value as "view" | "edit")
+                        }
+                        className="text-xs text-gray-700 font-medium bg-white border border-gray-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="view">View</option>
+                        <option value="edit">Edit</option>
+                      </select>
                       <button
                         onClick={() => revoke(s.id)}
                         className="text-gray-500 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"
