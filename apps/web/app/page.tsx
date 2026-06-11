@@ -1,44 +1,47 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { authApi } from "@/lib/api";
-import toast from "react-hot-toast";
-import { FileText } from "lucide-react";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import { authApi } from "@/lib/api"
+import { FileText } from "lucide-react"
+import toast from "react-hot-toast"
 
 export default function AuthPage() {
-  const { user, login, loading } = useAuth();
-  const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [form, setForm] = useState({ email: "", name: "", password: "" });
-  const [submitting, setSubmitting] = useState(false);
+  const { user, login, loading } = useAuth()
+  const router = useRouter()
+  const [mode, setMode] = useState<"login" | "register">("login")
+  const [form, setForm] = useState({ email: "", name: "", password: "" })
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!loading && user) router.replace("/dashboard");
-  }, [user, loading, router]);
+    if (!loading && user) router.replace("/dashboard")
+  }, [user, loading, router])
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
+    e.preventDefault()
+    setSubmitting(true)
     try {
       const res =
         mode === "login"
           ? await authApi.login({ email: form.email, password: form.password })
-          : await authApi.register(form);
-      login(res.data.token, res.data.user);
-      router.push("/dashboard");
+          : await authApi.register(form)
+      login(res.data.token, res.data.user)
+      router.push("/dashboard")
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Something went wrong";
-      toast.error(msg);
+          ?.error || "Something went wrong"
+      if (msg === "User not found") {
+        setMode("register")
+        toast.error("No user found - please create one")
+      }
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
-  if (loading) return null;
+  if (loading) return null
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
@@ -47,9 +50,13 @@ export default function AuthPage() {
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 mb-2">
             <FileText className="text-blue-600" size={32} />
-            <span className="text-2xl sm:text-3xl font-bold text-gray-900">Ajaia Docs</span>
+            <span className="text-2xl sm:text-3xl font-bold text-gray-900">
+              Ajaia Docs
+            </span>
           </div>
-          <p className="text-gray-600 text-sm">Collaborative document editing</p>
+          <p className="text-gray-600 text-sm">
+            Collaborative document editing
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
@@ -108,9 +115,7 @@ export default function AuthPage() {
                 required
                 minLength={6}
                 value={form.password}
-                onChange={(e) =>
-                  setForm({ ...form, password: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Min. 6 characters"
               />
@@ -123,12 +128,12 @@ export default function AuthPage() {
               {submitting
                 ? "Please wait…"
                 : mode === "login"
-                ? "Sign in"
-                : "Create account"}
+                  ? "Sign in"
+                  : "Create account"}
             </button>
           </form>
         </div>
       </div>
     </div>
-  );
+  )
 }
