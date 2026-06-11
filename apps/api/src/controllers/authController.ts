@@ -37,13 +37,13 @@ export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(400).json({ error: "email and password are required" });
+    res.status(400).json({ error: "Email and password are required" });
     return;
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    res.status(401).json({ error: "Invalid credentials" });
+    res.status(404).json({ error: "User not found" });
     return;
   }
 
