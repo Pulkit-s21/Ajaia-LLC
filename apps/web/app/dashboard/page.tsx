@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { docsApi } from "@/lib/api";
-import toast from "react-hot-toast";
+import { useEffect, useState, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import { docsApi } from "@/lib/api"
+import toast from "react-hot-toast"
 import {
   FileText,
   Plus,
@@ -12,85 +12,196 @@ import {
   Upload,
   Trash2,
   Users,
-  ChevronRight,
   Clock,
-} from "lucide-react";
+  Paperclip,
+} from "lucide-react"
+import { Grid } from "react-window"
+import type { CellComponentProps } from "react-window"
+import { AutoSizer } from "react-virtualized-auto-sizer"
 
 interface Doc {
-  id: string;
-  title: string;
-  updatedAt: string;
-  owner: { id: string; name: string; email: string };
-  permission?: string;
+  id: string
+  title: string
+  updatedAt: string
+  owner: { id: string; name: string; email: string }
+  permission?: string
+  attachments: [
+    {
+      id: string
+      documentId: string
+      filename: string
+      originalName: string
+      mimeType: string
+      size: number
+      createdAt: string
+    },
+  ]
+}
+
+type OwnedCellProps = {
+  docs: Doc[]
+  columnCount: number
+  onNavigate: (id: string) => void
+  onDelete: (id: string, e: React.MouseEvent) => void
+  onFormat: (iso: string) => string
+}
+
+function OwnedDocCell({
+  rowIndex,
+  columnIndex,
+  style,
+  docs,
+  columnCount,
+  onNavigate,
+  onDelete,
+  onFormat,
+}: CellComponentProps<OwnedCellProps>) {
+  const doc = docs[rowIndex * columnCount + columnIndex]
+  if (!doc) return <div style={style} />
+  return (
+    <div style={{ ...style, padding: 6 }}>
+      <div
+        onClick={() => onNavigate(doc.id)}
+        className="h-full bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all group flex flex-col justify-between"
+      >
+        <div className="min-w-0 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <FileText size={18} className="text-blue-500 shrink-0 mt-0.5" />
+              <p className="font-medium text-gray-900 truncate text-sm">
+                {doc.title}
+              </p>
+            </div>
+            <div className="">
+              <button
+                onClick={(e) => onDelete(doc.id, e)}
+                className="opacity-100 sm:group-hover:opacity-100 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all p-1.5 rounded"
+                title="Delete"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            <Clock size={11} />
+            {onFormat(doc.updatedAt)} . {doc.owner.name}
+          </p>
+          <p className="text-base text-blue-700 flex items-center gap-1">
+            {doc.attachments.length ? <Paperclip size={14}  /> : ""}
+            {doc.attachments?.length ? doc.attachments.length : ""}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type SharedCellProps = {
+  docs: Doc[]
+  columnCount: number
+  onNavigate: (id: string) => void
+}
+
+function SharedDocCell({
+  rowIndex,
+  columnIndex,
+  style,
+  docs,
+  columnCount,
+  onNavigate,
+}: CellComponentProps<SharedCellProps>) {
+  const doc = docs[rowIndex * columnCount + columnIndex]
+  if (!doc) return <div style={style} />
+  return (
+    <div style={{ ...style, padding: 6 }}>
+      <div
+        onClick={() => onNavigate(doc.id)}
+        className="h-full bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-purple-300 hover:shadow-sm transition-all flex flex-col justify-between"
+      >
+        <div className="min-w-0">
+          <div className="flex items-start gap-2 mb-2">
+            <FileText size={16} className="text-purple-500 shrink-0 mt-0.5" />
+            <p className="font-medium text-gray-900 truncate text-sm">
+              {doc.title}
+            </p>
+          </div>
+          <p className="text-xs text-gray-500">
+            Shared by {doc.owner.name} ·{" "}
+            <span className="capitalize">{doc.permission}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function DashboardPage() {
-  const { user, logout, loading } = useAuth();
-  const router = useRouter();
-  const [owned, setOwned] = useState<Doc[]>([]);
-  const [shared, setShared] = useState<Doc[]>([]);
-  const [fetching, setFetching] = useState(true);
-  const importRef = useRef<HTMLInputElement>(null);
+  const { user, logout, loading } = useAuth()
+  const router = useRouter()
+  const [owned, setOwned] = useState<Doc[]>([])
+  const [shared, setShared] = useState<Doc[]>([])
+  const [fetching, setFetching] = useState(true)
+  const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/");
-  }, [user, loading, router]);
+    if (!loading && !user) router.replace("/")
+  }, [user, loading, router])
 
   useEffect(() => {
-    if (user) fetchDocs();
-  }, [user]);
-
-  async function fetchDocs() {
-    try {
-      const res = await docsApi.list();
-      setOwned(res.data.owned);
-      setShared(res.data.shared);
-    } catch {
-      toast.error("Failed to load documents");
-    } finally {
-      setFetching(false);
+    if (!user) return
+    async function fetchDocs() {
+      try {
+        const res = await docsApi.list()
+        setOwned(res.data.owned)
+        setShared(res.data.shared)
+      } catch {
+        toast.error("Failed to load documents")
+      } finally {
+        setFetching(false)
+      }
     }
-  }
+    void fetchDocs()
+  }, [user])
 
   async function createDoc() {
     try {
-      const res = await docsApi.create({ title: "Untitled Document" });
-      router.push(`/documents/${res.data.document.id}`);
+      const res = await docsApi.create({ title: "Untitled Document" })
+      router.push(`/documents/${res.data.document.id}`)
     } catch {
-      toast.error("Failed to create document");
+      toast.error("Failed to create document")
     }
   }
 
   async function deleteDoc(id: string, e: React.MouseEvent) {
-    e.stopPropagation();
-    if (!confirm("Delete this document? This cannot be undone.")) return;
+    e.stopPropagation()
+    if (!confirm("Delete this document? This cannot be undone.")) return
     try {
-      await docsApi.delete(id);
-      setOwned((prev) => prev.filter((d) => d.id !== id));
-      toast.success("Document deleted");
+      await docsApi.delete(id)
+      setOwned((prev) => prev.filter((d) => d.id !== id))
+      toast.success("Document deleted")
     } catch {
-      toast.error("Failed to delete document");
+      toast.error("Failed to delete document")
     }
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowed = [".txt", ".md", ".docx"];
-    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    const file = e.target.files?.[0]
+    if (!file) return
+    const allowed = [".txt", ".md", ".docx"]
+    const ext = "." + file.name.split(".").pop()?.toLowerCase()
     if (!allowed.includes(ext)) {
-      toast.error("Only .txt, .md, and .docx files are supported for import");
-      return;
+      toast.error("Only .txt, .md, and .docx files are supported for import")
+      return
     }
-    const toastId = toast.loading("Importing file…");
+    const toastId = toast.loading("Importing file…")
     try {
-      const res = await docsApi.import(file);
-      toast.success("File imported as new document", { id: toastId });
-      router.push(`/documents/${res.data.document.id}`);
+      const res = await docsApi.import(file)
+      toast.success("File imported as new document", { id: toastId })
+      router.push(`/documents/${res.data.document.id}`)
     } catch {
-      toast.error("Import failed", { id: toastId });
+      toast.error("Import failed", { id: toastId })
     }
-    e.target.value = "";
+    e.target.value = ""
   }
 
   function formatDate(iso: string) {
@@ -98,16 +209,16 @@ export default function DashboardPage() {
       month: "short",
       day: "numeric",
       year: "numeric",
-    });
+    })
   }
 
-  if (loading || !user) return null;
+  if (loading || !user) return null
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="text-blue-600" size={22} />
             <span className="font-semibold text-gray-900">Ajaia Docs</span>
@@ -118,8 +229,8 @@ export default function DashboardPage() {
             </span>
             <button
               onClick={() => {
-                logout();
-                router.push("/");
+                logout()
+                router.push("/")
               }}
               className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
             >
@@ -130,7 +241,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-3 mb-6 sm:mb-8">
           <button
@@ -187,41 +298,34 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {owned.map((doc) => (
-                    <div
-                      key={doc.id}
-                      onClick={() => router.push(`/documents/${doc.id}`)}
-                      className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-3.5 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all group"
-                    >
-                      <FileText
-                        size={18}
-                        className="text-blue-500 shrink-0 mr-3"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
-                          {doc.title}
-                        </p>
-                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                          <Clock size={11} />
-                          {formatDate(doc.updatedAt)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 ml-3">
-                        <button
-                          onClick={(e) => deleteDoc(doc.id, e)}
-                          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all p-1.5 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                        <ChevronRight
-                          size={16}
-                          className="text-gray-400 group-hover:text-blue-500 transition-colors"
+                <div
+                  style={{
+                    height: Math.min(Math.ceil(owned.length / 3) * 140, 420),
+                  }}
+                >
+                  <AutoSizer
+                    renderProp={({ width = 0, height = 0 }) => {
+                      const columnCount = width < 640 ? 1 : width < 1024 ? 2 : 3
+                      const rowCount = Math.ceil(owned.length / columnCount)
+                      return (
+                        <Grid
+                          cellComponent={OwnedDocCell}
+                          cellProps={{
+                            docs: owned,
+                            columnCount,
+                            onNavigate: (id) => router.push(`/documents/${id}`),
+                            onDelete: deleteDoc,
+                            onFormat: formatDate,
+                          }}
+                          columnCount={columnCount}
+                          columnWidth={`${100 / columnCount}%`}
+                          rowCount={rowCount}
+                          rowHeight={130}
+                          style={{ width, height }}
                         />
-                      </div>
-                    </div>
-                  ))}
+                      )
+                    }}
+                  />
                 </div>
               )}
             </section>
@@ -233,32 +337,32 @@ export default function DashboardPage() {
                   <Users size={13} />
                   Shared with me
                 </h2>
-                <div className="space-y-2">
-                  {shared.map((doc) => (
-                    <div
-                      key={doc.id}
-                      onClick={() => router.push(`/documents/${doc.id}`)}
-                      className="flex items-center bg-white border border-gray-200 rounded-xl px-4 py-3.5 cursor-pointer hover:border-purple-300 hover:shadow-sm transition-all group"
-                    >
-                      <FileText
-                        size={18}
-                        className="text-purple-500 shrink-0 mr-3"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
-                          {doc.title}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Shared by {doc.owner.name} ·{" "}
-                          <span className="capitalize">{doc.permission}</span>
-                        </p>
-                      </div>
-                      <ChevronRight
-                        size={16}
-                        className="text-gray-400 group-hover:text-purple-500 transition-colors ml-3"
-                      />
-                    </div>
-                  ))}
+                <div
+                  style={{
+                    height: Math.min(Math.ceil(shared.length / 3) * 140, 420),
+                  }}
+                >
+                  <AutoSizer
+                    renderProp={({ width = 0, height = 0 }) => {
+                      const columnCount = width < 640 ? 1 : width < 1024 ? 2 : 3
+                      const rowCount = Math.ceil(shared.length / columnCount)
+                      return (
+                        <Grid
+                          cellComponent={SharedDocCell}
+                          cellProps={{
+                            docs: shared,
+                            columnCount,
+                            onNavigate: (id) => router.push(`/documents/${id}`),
+                          }}
+                          columnCount={columnCount}
+                          columnWidth={`${100 / columnCount}%`}
+                          rowCount={rowCount}
+                          rowHeight={130}
+                          style={{ width, height }}
+                        />
+                      )
+                    }}
+                  />
                 </div>
               </section>
             )}
@@ -266,5 +370,5 @@ export default function DashboardPage() {
         )}
       </main>
     </div>
-  );
+  )
 }
