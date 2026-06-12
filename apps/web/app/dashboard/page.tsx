@@ -1,23 +1,17 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { docsApi } from "@/lib/api"
-import toast from "react-hot-toast"
-import {
-  FileText,
-  Plus,
-  LogOut,
-  Upload,
-  Trash2,
-  Users,
-  Clock,
-  Paperclip,
-} from "lucide-react"
+import { FileText, Trash2, Users, Clock, Paperclip } from "lucide-react"
 import { Grid } from "react-window"
 import type { CellComponentProps } from "react-window"
 import { AutoSizer } from "react-virtualized-auto-sizer"
+import { useDashboardHelper } from "../hooks/dashboard"
+import Navbar from "../../components/Navbar"
+import QuickActions from "../../components/QuickActions"
+import toast from "react-hot-toast"
 
 interface Doc {
   id: string
@@ -87,7 +81,7 @@ function OwnedDocCell({
             {onFormat(doc.updatedAt)} . {doc.owner.name}
           </p>
           <p className="text-base text-blue-700 flex items-center gap-1">
-            {doc.attachments.length ? <Paperclip size={14}  /> : ""}
+            {doc.attachments.length ? <Paperclip size={14} /> : ""}
             {doc.attachments?.length ? doc.attachments.length : ""}
           </p>
         </div>
@@ -136,12 +130,12 @@ function SharedDocCell({
 }
 
 export default function DashboardPage() {
-  const { user, logout, loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [owned, setOwned] = useState<Doc[]>([])
   const [shared, setShared] = useState<Doc[]>([])
   const [fetching, setFetching] = useState(true)
-  const importRef = useRef<HTMLInputElement>(null)
+  const { handleImport } = useDashboardHelper()
 
   useEffect(() => {
     if (!loading && !user) router.replace("/")
@@ -184,26 +178,6 @@ export default function DashboardPage() {
     }
   }
 
-  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const allowed = [".txt", ".md", ".docx"]
-    const ext = "." + file.name.split(".").pop()?.toLowerCase()
-    if (!allowed.includes(ext)) {
-      toast.error("Only .txt, .md, and .docx files are supported for import")
-      return
-    }
-    const toastId = toast.loading("Importing file…")
-    try {
-      const res = await docsApi.import(file)
-      toast.success("File imported as new document", { id: toastId })
-      router.push(`/documents/${res.data.document.id}`)
-    } catch {
-      toast.error("Import failed", { id: toastId })
-    }
-    e.target.value = ""
-  }
-
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString("en-US", {
       month: "short",
@@ -217,58 +191,11 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="text-blue-600" size={22} />
-            <span className="font-semibold text-gray-900">Ajaia Docs</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-700 hidden sm:block">
-              {user.name}
-            </span>
-            <button
-              onClick={() => {
-                logout()
-                router.push("/")
-              }}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Actions */}
-        <div className="flex flex-wrap items-center gap-3 mb-6 sm:mb-8">
-          <button
-            onClick={createDoc}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm"
-          >
-            <Plus size={16} />
-            New document
-          </button>
-          <button
-            onClick={() => importRef.current?.click()}
-            className="flex items-center gap-2 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Upload size={16} />
-            Import file
-          </button>
-          <input
-            ref={importRef}
-            type="file"
-            accept=".txt,.md,.docx"
-            className="hidden"
-            onChange={handleImport}
-          />
-          <span className="text-xs text-gray-500 hidden sm:block">
-            Supported: .txt, .md, .docx
-          </span>
-        </div>
+        <QuickActions createDoc={createDoc} handleImport={handleImport} />
 
         {fetching ? (
           <div className="text-center py-20 text-gray-500 text-sm">
