@@ -25,5 +25,22 @@ export function useDashboardHelper() {
     e.target.value = ""
   }
 
-  return { handleImport }
+  async function createDoc() {
+    try {
+      const res = await docsApi.create({ title: "Untitled Document" })
+      router.push(`/documents/${res.data.document.id}`)
+    } catch {
+      toast.error("Failed to create document")
+    }
+  }
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
+
+  return { handleImport, createDoc, formatDate }
 }
