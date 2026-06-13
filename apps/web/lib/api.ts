@@ -91,3 +91,12 @@ export interface Doc {
     },
   ]
 }
+
+export interface Document {
+  id: string
+  title: string
+  content: string
+  ownerId: string
+  owner: { id: string; name: string; email: string }
+  attachments: { id: string; originalName: string; filename: string }[]
+}

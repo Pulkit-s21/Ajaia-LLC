@@ -1,13 +1,14 @@
 "use client"
 
-import { lazy, Suspense } from "react"
+import { lazy } from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { docsApi } from "@/lib/api"
 import { useDashboardHelper } from "../hooks/dashboard"
-import toast from "react-hot-toast"
 import { Doc } from "@/lib/api"
+import toast from "react-hot-toast"
+import SuspenseComp from "../../components/SuspenseComp"
 
 const SharedDocs = lazy(() => import("../../components/SharedDocs"))
 const Loader = lazy(() => import("../../components/Loader"))
@@ -59,33 +60,31 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <Navbar />
+      <SuspenseComp>
+        {/* Navbar */}
+        <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Actions */}
-        <QuickActions createDoc={createDoc} handleImport={handleImport} />
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          {/* Actions */}
+          <QuickActions createDoc={createDoc} handleImport={handleImport} />
 
-        {fetching ? (
-          <Loader size="sm" color="primary" />
-        ) : (
-          <>
-            {/* Owned documents */}
-            <Suspense fallback={<Loader size="sm" color="primary" />}>
+          {fetching ? (
+            <Loader size="sm" color="primary" />
+          ) : (
+            <>
+              {/* Owned documents */}
               <OwnedDocs
                 owned={owned}
                 createDoc={createDoc}
                 deleteDoc={deleteDoc}
               />
-            </Suspense>
 
-            {/* Shared with me */}
-            <Suspense fallback={<Loader size="sm" color="primary" />}>
+              {/* Shared with me */}
               <SharedDocs shared={shared} />
-            </Suspense>
-          </>
-        )}
-      </main>
+            </>
+          )}
+        </main>
+      </SuspenseComp>
     </div>
   )
 }
