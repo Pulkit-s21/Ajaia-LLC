@@ -1,6 +1,7 @@
 import { FileText, LogOut } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import { useRouter } from "next/navigation"
+import { Tooltip } from "react-tooltip"
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -14,8 +15,12 @@ export default function Navbar() {
           <span className="font-semibold text-gray-900">Ajaia Docs</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-gray-700 hidden sm:block">
-            {user?.name}
+          <span
+            data-tooltip-id="user-avatar"
+            data-tooltip-content={user?.name}
+            className="text-sm font-medium text-gray-100  bg-gray-800 rounded-full px-3 py-2"
+          >
+            {user?.name?.split("")[0]}
           </span>
           <button
             onClick={() => {
@@ -29,6 +34,7 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+      <Tooltip id="user-avatar" place="left" />
     </header>
   )
 }
