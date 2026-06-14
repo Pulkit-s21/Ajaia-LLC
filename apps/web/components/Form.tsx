@@ -1,5 +1,4 @@
 import { lazy } from "react"
-import SuspenseComp from "./SuspenseComp"
 
 interface Form {
   email: string
@@ -27,7 +26,6 @@ export default function Form({
 }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <SuspenseComp>
         {mode === "register" && (
           <InputField
             label="Full Name"
@@ -58,7 +56,6 @@ export default function Form({
         />
 
         <Button mode={mode} submitting={submitting} />
-      </SuspenseComp>
     </form>
   )
 }

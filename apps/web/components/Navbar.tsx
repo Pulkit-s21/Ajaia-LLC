@@ -1,11 +1,9 @@
 import { FileText, LogOut } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
-import { useRouter } from "next/navigation"
 import { Tooltip } from "react-tooltip"
 
 export default function Navbar() {
   const { user, logout } = useAuth()
-  const router = useRouter()
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -25,7 +23,6 @@ export default function Navbar() {
           <button
             onClick={() => {
               logout()
-              router.push("/")
             }}
             className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
           >

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { authApi } from "@/lib/api"
 import toast from "react-hot-toast"
-import SuspenseComp from "@/components/SuspenseComp"
 
 const Brand = lazy(() => import("@/components/Brand"))
 const ModeToggle = lazy(() => import("@/components/ModeToggle"))
@@ -49,7 +48,6 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-      <SuspenseComp>
         <div className="w-full max-w-md">
           {/* Brand */}
           <Brand />
@@ -67,7 +65,6 @@ export default function AuthPage() {
             />
           </div>
         </div>
-      </SuspenseComp>
     </div>
   )
 }

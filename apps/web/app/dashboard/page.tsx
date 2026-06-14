@@ -8,7 +8,6 @@ import { docsApi } from "@/lib/api"
 import { useDashboardHelper } from "../hooks/dashboard"
 import { Doc } from "@/lib/api"
 import toast from "react-hot-toast"
-import SuspenseComp from "../../components/SuspenseComp"
 
 const SharedDocs = lazy(() => import("../../components/SharedDocs"))
 const Loader = lazy(() => import("../../components/Loader"))
@@ -60,7 +59,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <SuspenseComp>
         {/* Navbar */}
         <Navbar />
 
@@ -84,7 +82,6 @@ export default function DashboardPage() {
             </>
           )}
         </main>
-      </SuspenseComp>
     </div>
   )
 }
