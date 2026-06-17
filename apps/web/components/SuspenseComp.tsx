@@ -9,7 +9,13 @@ interface Props {
 
 export default function SuspenseComp({ children }: Props) {
   return (
-    <Suspense fallback={<Loader size="sm" color="primary" />}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full flex items-center justify-center">
+          <Loader size="md" color="primary" />
+        </div>
+      }
+    >
       {children}
     </Suspense>
   )
