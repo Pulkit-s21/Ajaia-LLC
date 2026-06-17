@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/")
     setToken(null)
     setUser(null)
-  }, [router])
+  }, [])
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
