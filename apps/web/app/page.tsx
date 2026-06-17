@@ -33,10 +33,14 @@ export default function AuthPage() {
       login(res.data.token, res.data.user)
       router.push("/dashboard")
     } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status
       const msg =
         (err as { response?: { data?: { error?: string } } })?.response?.data
           ?.error || "Something went wrong"
-      if (msg === "User not found") {
+      if (status === 429) {
+        toast.error("Too many requests, please try again later")
+      } else if (msg === "User not found") {
         setMode("register")
         toast.error("No user found - please create one")
       }

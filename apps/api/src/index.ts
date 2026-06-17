@@ -26,9 +26,6 @@ const limiter = rateLimit({
   message: "Too many requests, please try again later",
 })
 
-app.use("/api/auth", authLimiter)
-app.use("/api", limiter)
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -41,6 +38,9 @@ app.use(
     credentials: true,
   }),
 )
+
+app.use("/api/auth", authLimiter)
+app.use("/api", limiter)
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true }))
 
