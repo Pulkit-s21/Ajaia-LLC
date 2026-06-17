@@ -1,14 +1,15 @@
 "use client"
 
-import { useState, useEffect, lazy } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { authApi } from "@/lib/api"
+import dynamic from "next/dynamic"
 import toast from "react-hot-toast"
 
-const Brand = lazy(() => import("@/components/Brand"))
-const ModeToggle = lazy(() => import("@/components/ModeToggle"))
-const Form = lazy(() => import("@/components/Form"))
+const Brand = dynamic(() => import("@/components/Brand"))
+const ModeToggle = dynamic(() => import("@/components/ModeToggle"))
+const Form = dynamic(() => import("@/components/Form"))
 
 export default function AuthPage() {
   const { user, login, loading } = useAuth()
@@ -48,23 +49,26 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-        <div className="w-full max-w-md">
-          {/* Brand */}
-          <Brand />
+      <title>{mode === "login" ? "Login" : "Register"} | Ajaia Docs</title>
+      <meta name="description" content="Access the dashboard securely" />
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
-            {/* Mode toggle */}
-            <ModeToggle mode={mode} setMode={setMode} />
+      <div className="w-full max-w-md">
+        {/* Brand */}
+        <Brand />
 
-            <Form
-              mode={mode}
-              form={form}
-              submitting={submitting}
-              setForm={setForm}
-              handleSubmit={handleSubmit}
-            />
-          </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+          {/* Mode toggle */}
+          <ModeToggle mode={mode} setMode={setMode} />
+
+          <Form
+            mode={mode}
+            form={form}
+            submitting={submitting}
+            setForm={setForm}
+            handleSubmit={handleSubmit}
+          />
         </div>
+      </div>
     </div>
   )
 }

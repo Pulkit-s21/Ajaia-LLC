@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react"
 import { authApi } from "@/lib/api"
 import { useRouter } from "next/navigation"
@@ -33,36 +34,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const logout = useCallback(() => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    router.push("/")
+    setToken(null)
+    setUser(null)
+  }, [router])
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
     const storedUser = localStorage.getItem("user")
     if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
-      // Verify token is still valid
       authApi
         .me()
-        .then((res) => setUser(res.data.user))
+        .then((res) => {
+          setToken(storedToken)
+          setUser(res.data.user)
+        })
         .catch(() => logout())
         .finally(() => setLoading(false))
     } else {
-      setLoading(false)
+      queueMicrotask(() => setLoading(false))
     }
-  }, [])
+  }, [logout])
 
   function login(newToken: string, newUser: User) {
     localStorage.setItem("token", newToken)
     localStorage.setItem("user", JSON.stringify(newUser))
     setToken(newToken)
     setUser(newUser)
-  }
-
-  function logout() {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
-    router.push("/")
-    setToken(null)
-    setUser(null)
   }
 
   return (
