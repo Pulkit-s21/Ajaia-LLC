@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef, lazy } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { docsApi, Document } from "@/lib/api"
@@ -10,8 +10,8 @@ import dynamic from "next/dynamic"
 import toast from "react-hot-toast"
 import ShareModal from "@/components/ShareModal"
 
-const DocNavbar = lazy(() => import("@/components/DocNavbar"))
-const Attachments = lazy(() => import("@/components/Attachments"))
+const DocNavbar = dynamic(() => import("@/components/DocNavbar"))
+const Attachments = dynamic(() => import("@/components/Attachments"))
 
 const RichEditor = dynamic(() => import("@/components/RichEditor"), {
   ssr: false,

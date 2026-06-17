@@ -1,6 +1,5 @@
 "use client"
 
-import { lazy } from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
@@ -8,12 +7,13 @@ import { docsApi } from "@/lib/api"
 import { useDashboardHelper } from "../hooks/dashboard"
 import { Doc } from "@/lib/api"
 import toast from "react-hot-toast"
+import dynamic from "next/dynamic"
 
-const SharedDocs = lazy(() => import("../../components/SharedDocs"))
-const Loader = lazy(() => import("../../components/Loader"))
-const Navbar = lazy(() => import("../../components/Navbar"))
-const QuickActions = lazy(() => import("../../components/QuickActions"))
-const OwnedDocs = lazy(() => import("../../components/OwnedDocs"))
+const SharedDocs = dynamic(() => import("../../components/SharedDocs"))
+const Loader = dynamic(() => import("../../components/Loader"))
+const Navbar = dynamic(() => import("../../components/Navbar"))
+const QuickActions = dynamic(() => import("../../components/QuickActions"))
+const OwnedDocs = dynamic(() => import("../../components/OwnedDocs"))
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
@@ -59,29 +59,29 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        {/* Navbar */}
-        <Navbar />
+      {/* Navbar */}
+      <Navbar />
 
-        <main className="max-w-7xl mx-auto px-4 py-8">
-          {/* Actions */}
-          <QuickActions createDoc={createDoc} handleImport={handleImport} />
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Actions */}
+        <QuickActions createDoc={createDoc} handleImport={handleImport} />
 
-          {fetching ? (
-            <Loader size="sm" color="primary" />
-          ) : (
-            <>
-              {/* Owned documents */}
-              <OwnedDocs
-                owned={owned}
-                createDoc={createDoc}
-                deleteDoc={deleteDoc}
-              />
+        {fetching ? (
+          <Loader size="sm" color="primary" />
+        ) : (
+          <>
+            {/* Owned documents */}
+            <OwnedDocs
+              owned={owned}
+              createDoc={createDoc}
+              deleteDoc={deleteDoc}
+            />
 
-              {/* Shared with me */}
-              <SharedDocs shared={shared} />
-            </>
-          )}
-        </main>
+            {/* Shared with me */}
+            <SharedDocs shared={shared} />
+          </>
+        )}
+      </main>
     </div>
   )
 }

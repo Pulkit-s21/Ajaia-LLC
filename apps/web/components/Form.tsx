@@ -1,4 +1,4 @@
-import { lazy } from "react"
+import dynamic from "next/dynamic"
 
 interface Form {
   email: string
@@ -14,8 +14,8 @@ type Props = {
   handleSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void
 }
 
-const InputField = lazy(() => import("@/components/InputField"))
-const Button = lazy(() => import("@/components/Button"))
+const InputField = dynamic(() => import("@/components/InputField"))
+const Button = dynamic(() => import("@/components/Button"))
 
 export default function Form({
   handleSubmit,
