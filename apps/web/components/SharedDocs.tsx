@@ -52,13 +52,16 @@ export default function SharedDocs({ shared }: Props) {
   }
 
   return (
-    <>
-      {shared.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Users size={13} />
-            Shared with me
-          </h2>
+    <section>
+      <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <Users size={13} />
+        Shared with me
+      </h2>
+
+      {shared.length === 0 ? (
+        <p>No Document Shared yet...</p>
+      ) : (
+        <>
           <div
             style={{
               height: Math.min(Math.ceil(shared.length / 3) * 140, 420),
@@ -86,8 +89,8 @@ export default function SharedDocs({ shared }: Props) {
               }}
             />
           </div>
-        </section>
+        </>
       )}
-    </>
+    </section>
   )
 }

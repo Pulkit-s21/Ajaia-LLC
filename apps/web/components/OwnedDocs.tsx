@@ -38,7 +38,7 @@ export default function OwnedDocs({ owned, createDoc, deleteDoc }: Props) {
     if (!doc) return <div style={style} />
 
     return (
-      <div style={{ ...style, padding: 6 }}>
+      <div className="group" style={{ ...style, padding: 6 }}>
         <div
           onClick={() => onNavigate(doc.id)}
           className="h-full bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all group flex flex-col justify-between"
@@ -51,10 +51,10 @@ export default function OwnedDocs({ owned, createDoc, deleteDoc }: Props) {
                   {doc.title}
                 </p>
               </div>
-              <div className="">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => onDelete(doc.id, e)}
-                  className="opacity-100 sm:group-hover:opacity-100 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all p-1.5 rounded"
+                  className="text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all p-1.5 rounded"
                   title="Delete"
                 >
                   <Trash2 size={20} />
