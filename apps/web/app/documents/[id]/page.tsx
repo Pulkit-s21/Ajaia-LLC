@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { docsApi, Document } from "@/lib/api"
 import { Loader2 } from "lucide-react"
+import DomPurify from "dompurify"
 import dynamic from "next/dynamic"
 import toast from "react-hot-toast"
 import ShareModal from "@/components/ShareModal"
@@ -43,7 +44,7 @@ export default function DocumentPage() {
       .then((res) => {
         setDoc(res.data.document)
         setTitle(res.data.document.title)
-        setContent(res.data.document.content)
+        setContent(DomPurify.sanitize(res.data.document.content))
         setIsOwner(res.data.isOwner)
         setCanEdit(res.data.permission === "edit")
       })

@@ -4,13 +4,46 @@ import { prisma } from "../lib/prisma"
 import fs from "fs"
 import path from "path"
 import mammoth from "mammoth"
+import sanitizeHtml from "sanitize-html"
 
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
+function sanitizeContent(value: string): string {
+  const clean = sanitizeHtml(value, {
+    allowedTags: [
+      "p",
+      "b",
+      "i",
+      "em",
+      "strong",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "ul",
+      "ol",
+      "li",
+      "a",
+      "img",
+      "blockquote",
+      "br",
+      "hr",
+    ],
+    allowedAttributes: {
+      a: ["href", "name", "target"],
+      img: ["src", "alt"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+  })
+
+  return clean
+}
+
 async function docxToHtml(filePath: string): Promise<string> {
   const result = await mammoth.convertToHtml({ path: filePath })
-  return result.value
+
+  return sanitizeContent(result.value)
 }
 
 export async function listDocuments(req: AuthRequest, res: Response) {
@@ -195,7 +228,7 @@ export async function uploadFile(req: AuthRequest, res: Response) {
   let importedContent: string | undefined
   const filePath = path.join(__dirname, "../../uploads", file.filename)
   if (isTextLike) {
-    importedContent = fs.readFileSync(filePath, "utf-8")
+    importedContent = sanitizeContent(fs.readFileSync(filePath, "utf-8"))
   } else if (isDocx) {
     importedContent = await docxToHtml(filePath)
   }
@@ -274,7 +307,10 @@ export async function importFileAsDocument(req: AuthRequest, res: Response) {
     content = await docxToHtml(filePath)
   } else {
     const rawContent = fs.readFileSync(filePath, "utf-8")
-    content = `<p>${rawContent
+
+    const result = sanitizeContent(rawContent)
+
+    content = `<p>${result
       .replace(/\n\n/g, "</p><p>")
       .replace(/\n/g, "<br>")}</p>`
   }
