@@ -1,39 +1,40 @@
-import { Response } from "express";
-import { AuthRequest } from "../middleware/auth";
-import { prisma } from "../lib/prisma";
+import { Response } from "express"
+import { AuthRequest } from "../middleware/auth"
+import { prisma } from "../lib/prisma"
 
 export async function shareDocument(req: AuthRequest, res: Response) {
-  const userId = req.userId!;
-  const id = req.params.id as string;
-  const { email, permission } = req.body;
+  const userId = req.userId!
+  const id = req.params.id as string
+  const { email, permission } = req.body
 
   if (!email) {
-    res.status(400).json({ error: "email is required" });
-    return;
+    res.status(400).json({ error: "email is required" })
+    return
   }
 
-  const perm = permission === "edit" ? "edit" : "view";
+  const perm = permission === "edit" ? "edit" : "view"
 
-  const doc = await prisma.document.findUnique({ where: { id } });
+  const doc = await prisma.document.findUnique({ where: { id } })
   if (!doc) {
-    res.status(404).json({ error: "Document not found" });
-    return;
+    res.status(404).json({ error: "Document not found" })
+    return
   }
   if (doc.ownerId !== userId) {
-    res.status(403).json({ error: "Only the owner can share this document" });
-    return;
+    res.status(403).json({ error: "Only the owner can share this document" })
+    return
   }
 
-  const targetUser = await prisma.user.findUnique({ where: { email } });
+  const targetUser = await prisma.user.findUnique({ where: { email } })
   if (!targetUser) {
-    res
-      .status(404)
-      .json({ error: `${email} doesn't have an Ajaia Docs account yet. They need to sign up first.` });
-    return;
+    res.status(404).json({
+      error: `${email.split("@")[0]} doesn't have an Ajaia Docs account yet. They need to sign up first.`, 
+      // showing only the name/first part of email in toast
+    })
+    return
   }
   if (targetUser.id === userId) {
-    res.status(400).json({ error: "Cannot share with yourself" });
-    return;
+    res.status(400).json({ error: "Cannot share with yourself" })
+    return
   }
 
   const share = await prisma.documentShare.upsert({
@@ -41,48 +42,48 @@ export async function shareDocument(req: AuthRequest, res: Response) {
     update: { permission: perm },
     create: { documentId: id, userId: targetUser.id, permission: perm },
     include: { user: { select: { id: true, name: true, email: true } } },
-  });
+  })
 
-  res.status(201).json({ share });
+  res.status(201).json({ share })
 }
 
 export async function revokeShare(req: AuthRequest, res: Response) {
-  const userId = req.userId!;
-  const id = req.params.id as string;
-  const shareId = req.params.shareId as string;
+  const userId = req.userId!
+  const id = req.params.id as string
+  const shareId = req.params.shareId as string
 
-  const doc = await prisma.document.findUnique({ where: { id } });
+  const doc = await prisma.document.findUnique({ where: { id } })
   if (!doc) {
-    res.status(404).json({ error: "Document not found" });
-    return;
+    res.status(404).json({ error: "Document not found" })
+    return
   }
   if (doc.ownerId !== userId) {
-    res.status(403).json({ error: "Only the owner can revoke access" });
-    return;
+    res.status(403).json({ error: "Only the owner can revoke access" })
+    return
   }
 
-  await prisma.documentShare.delete({ where: { id: shareId } });
-  res.json({ success: true });
+  await prisma.documentShare.delete({ where: { id: shareId } })
+  res.json({ success: true })
 }
 
 export async function listShares(req: AuthRequest, res: Response) {
-  const userId = req.userId!;
-  const id = req.params.id as string;
+  const userId = req.userId!
+  const id = req.params.id as string
 
-  const doc = await prisma.document.findUnique({ where: { id } });
+  const doc = await prisma.document.findUnique({ where: { id } })
   if (!doc) {
-    res.status(404).json({ error: "Document not found" });
-    return;
+    res.status(404).json({ error: "Document not found" })
+    return
   }
   if (doc.ownerId !== userId) {
-    res.status(403).json({ error: "Only the owner can view shares" });
-    return;
+    res.status(403).json({ error: "Only the owner can view shares" })
+    return
   }
 
   const shares = await prisma.documentShare.findMany({
     where: { documentId: id },
     include: { user: { select: { id: true, name: true, email: true } } },
-  });
+  })
 
-  res.json({ shares });
+  res.json({ shares })
 }
