@@ -153,6 +153,10 @@ export async function updateDocument(req: AuthRequest, res: Response) {
     return
   }
 
+  if (title.length > 15) {
+    res.status(400).json({ error: "Title must be less than 15 characters" })
+  }
+
   const isOwner = doc.ownerId === userId
   const share = await prisma.documentShare.findUnique({
     where: { documentId_userId: { documentId: id, userId } },

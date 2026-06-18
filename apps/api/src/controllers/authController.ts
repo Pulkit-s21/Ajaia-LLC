@@ -5,13 +5,15 @@ import bcrypt from "bcryptjs"
 
 export async function register(req: Request, res: Response) {
   const { email, name, password } = req.body
+  const regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{6,}$/
+  const isValid = regex.test(password)
 
   if (!email || !name || !password) {
     res.status(400).json({ error: "email, name, and password are required" })
     return
   }
-  if (password.length < 6) {
-    res.status(400).json({ error: "Password must be at least 6 characters" })
+  if (password.length < 6 || !isValid) {
+    res.status(400).json({ error: "Password is invalid" })
     return
   }
 

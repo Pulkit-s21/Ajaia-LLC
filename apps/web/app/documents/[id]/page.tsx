@@ -71,10 +71,14 @@ export default function DocumentPage() {
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value
-    setTitle(val)
-    setSaveState("unsaved")
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => save(val, content), 1500)
+    if (val.length <= 15) {
+      setTitle(val)
+      setSaveState("unsaved")
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => save(val, content), 1500)
+    } else {
+      toast.error("Title length must be less than 15.")
+    }
   }
 
   function handleContentChange(html: string) {

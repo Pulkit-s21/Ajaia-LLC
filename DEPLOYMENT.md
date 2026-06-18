@@ -4,7 +4,7 @@
 
 | Service | URL |
 |---|---|
-| Frontend (Vercel) | https://ajaia-llc-web.vercel.app |
+| Frontend (Vercel) | https://ajaia-llc-web-git-main-pulkits21s-projects.vercel.app |
 | Backend API (Render) | https://ajaia-docs-api-x10y.onrender.com |
 | API Health Check | https://ajaia-docs-api-x10y.onrender.com/health |
 

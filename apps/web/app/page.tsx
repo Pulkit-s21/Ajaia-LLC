@@ -43,6 +43,12 @@ export default function AuthPage() {
       } else if (msg === "User not found") {
         setMode("register")
         toast.error("No user found - please create one")
+      } else if (msg === "Password is invalid") {
+        toast.error(
+          "Password must include uppercase, lowercase, number & special character (min 6 chars)",
+        )
+      } else {
+        toast.error(msg)
       }
     } finally {
       setSubmitting(false)
