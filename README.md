@@ -2,6 +2,8 @@
 
 Lightweight collaborative document editor. Monorepo with npm workspaces, Docker Compose for the full stack.
 
+Live URL: https://ajaia-llc-web-git-master-pulkits21s-projects.vercel.app/
+
 ---
 
 ## Structure
